@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#123b55">
+<title>ICU Notes & Handover</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial;background:#f1f5f9;color:#172b3a}
+header{background:#123b55;color:white;padding:22px}
+header h2{margin:0}
+header p{margin:7px 0 0;color:#d4e5ee}
+main{padding:16px;max-width:750px;margin:auto}
+.card{background:white;padding:17px;border-radius:12px;margin-bottom:14px;box-shadow:0 2px 8px #0001}
+h3{margin-top:0;color:#123b55}
+button{background:#126b81;color:white;border:0;padding:12px 16px;border-radius:8px;margin:4px;cursor:pointer}
+input,textarea,select{width:100%;padding:12px;margin:7px 0 12px;border:1px solid #ccd5dd;border-radius:7px;font-size:16px}
+textarea{min-height:90px}
+.patient{border:1px solid #dce5eb;padding:12px;border-radius:9px;margin:10px 0}
+.small{color:#64748b;font-size:13px}
+nav{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:15px}
+nav button{flex:1}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<header>
+<h2>🏥 ICU Notes & Handover</h2>
+<p>Clinical documentation and patient management</p>
+</header>
+<main>
+<div class="card">
+<h3>Dashboard</h3>
+<p>Patients currently registered: <b id="count">0</b></p>
+<p class="small">ICU and General Ward Management</p>
+</div>
+
+<nav>
+<button onclick="show('patients')">Patients</button>
+<button onclick="show('add')">Add Patient</button>
+<button onclick="show('notes')">Clinical Notes</button>
+<button onclick="show('handover')">Handover</button>
+</nav>
+
+<section id="patients" class="card">
+<h3>Patient List</h3>
+<div id="patientList">No patients registered.</div>
+</section>
+
+<section id="add" class="card hidden">
+<h3>Register Patient</h3>
+<form id="patientForm">
+<label>Patient ID</label>
+<input id="pid" required>
+<label>Patient name or test name</label>
+<input id="pname" required>
+<label>Age</label>
+<input id="age" type="number">
+<label>Ward</label>
+<select id="ward">
+<option>ICU</option>
+<option>General Ward</option>
+<option>HDU</option>
+</select>
+<label>Diagnosis</label>
+<textarea id="diagnosis"></textarea>
+<button type="submit">Save Patient</button>
+</form>
+</section>
+
+<section id="notes" class="card hidden">
+<h3>Daily Clinical Notes</h3>
+<label>Patient ID</label>
+<input id="noteid">
+<label>Clinical progress</label>
+<textarea id="progress" placeholder="Clinical assessment and progress"></textarea>
+<label>Management plan</label>
+<textarea id="plan" placeholder="Treatment and management plan"></textarea>
+<button onclick="saveNote()">Save Note</button>
+<div id="noteResult"></div>
+</section>
+
+<section id="handover" class="card hidden">
+<h3>Doctor Handover</h3>
+<label>Patient ID</label>
+<input id="handid">
+<label>Clinical condition</label>
+<textarea id="condition"></textarea>
+<label>Pending investigations</label>
+<textarea id="pending"></textarea>
+<label>Tasks for next shift</label>
+<textarea id="tasks"></textarea>
+<button onclick="saveHandover()">Save Handover</button>
+<div id="handResult"></div>
+</section>
+
+<div class="card">
+<p class="small">ICU Notes prototype • Version 1.0</p>
+</div>
+</main>
+
+<script>
+let patients=JSON.parse(localStorage.getItem('icuPatients')||'[]');
+
+function save(){
+ localStorage.setItem('icuPatients',JSON.stringify(patients));
+ render();
+}
+
+function render(){
+ document.getElementById('count').textContent=patients.length;
+ document.getElementById('patientList').innerHTML=
+ patients.length?patients.map(p=>`
+ <div class="patient">
+ <b>${escapeHTML(p.name)}</b>
+ <p>ID: ${escapeHTML(p.id)} | Age: ${escapeHTML(p.age||'N/A')}</p>
+ <p>Ward: ${escapeHTML(p.ward)}</p>
+ <p>Diagnosis: ${escapeHTML(p.diagnosis||'Not entered')}</p>
+ </div>`).join(''):'No patients registered.';
+}
+
+function escapeHTML(value){
+ return String(value).replace(/[&<>"']/g,c=>({
+ '&':'&amp;','<':'&lt;','>':'&gt;',
+ '"':'&quot;',"'":'&#39;'
+ })[c]);
+}
+
+function show(id){
+ ['patients','add','notes','handover'].forEach(x=>
+ document.getElementById(x).classList.add('hidden'));
+ document.getElementById(id).classList.remove('hidden');
+}
+
+document.getElementById('patientForm').onsubmit=function(e){
+ e.preventDefault();
+ const id=document.getElementById('pid').value.trim();
+ if(patients.some(p=>p.id===id)){
+ alert('This patient ID already exists');
+ return;
+ }
+ patients.push({
+ id,
+ name:document.getElementById('pname').value,
+ age:document.getElementById('age').value,
+ ward:document.getElementById('ward').value,
+ diagnosis:document.getElementById('diagnosis').value
+ });
+ save();
+ this.reset();
+ show('patients');
+ alert('Patient registered');
+};
+
+function saveNote(){
+ const id=document.getElementById('noteid').value.trim();
+ if(!patients.some(p=>p.id===id)){
+ alert('Patient ID not found');
+ return;
+ }
+ const notes=JSON.parse(localStorage.getItem('icuNotes')||'[]');
+ notes.push({
+ id,
+ date:new Date().toISOString(),
+ progress:document.getElementById('progress').value,
+ plan:document.getElementById('plan').value
+ });
+ localStorage.setItem('icuNotes',JSON.stringify(notes));
+ document.getElementById('noteResult').textContent='Clinical note saved.';
+}
+
+function saveHandover(){
+ const id=document.getElementById('handid').value.trim();
+ if(!patients.some(p=>p.id===id)){
+ alert('Patient ID not found');
+ return;
+ }
+ const hands=JSON.parse(localStorage.getItem('icuHandovers')||'[]');
+ hands.push({
+ id,
+ date:new Date().toISOString(),
+ condition:document.getElementById('condition').value,
+ pending:document.getElementById('pending').value,
+ tasks:document.getElementById('tasks').value
+ });
+ localStorage.setItem('icuHandovers',JSON.stringify(hands));
+ document.getElementById('handResult').textContent='Handover saved.';
+}
+
+render();
+</script>
+</body>
+</html>
