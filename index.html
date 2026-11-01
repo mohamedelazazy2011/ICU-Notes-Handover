@@ -1,194 +1,319 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#123b55">
-<title>ICU Notes & Handover</title>
+<title>ICU Notes V2</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial;background:#f1f5f9;color:#172b3a}
-header{background:#123b55;color:white;padding:22px}
-header h2{margin:0}
-header p{margin:7px 0 0;color:#d4e5ee}
-main{padding:16px;max-width:750px;margin:auto}
-.card{background:white;padding:17px;border-radius:12px;margin-bottom:14px;box-shadow:0 2px 8px #0001}
-h3{margin-top:0;color:#123b55}
-button{background:#126b81;color:white;border:0;padding:12px 16px;border-radius:8px;margin:4px;cursor:pointer}
-input,textarea,select{width:100%;padding:12px;margin:7px 0 12px;border:1px solid #ccd5dd;border-radius:7px;font-size:16px}
-textarea{min-height:90px}
-.patient{border:1px solid #dce5eb;padding:12px;border-radius:9px;margin:10px 0}
-.small{color:#64748b;font-size:13px}
-nav{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:15px}
-nav button{flex:1}
-.hidden{display:none}
+body{margin:0;background:#edf2f6;color:#203344;font-family:Arial,sans-serif}
+header{background:#123b55;color:white;padding:20px}
+header h2{margin:0;font-size:21px}
+header p{margin:6px 0 0;color:#c9dce7}
+main{max-width:850px;margin:auto;padding:13px}
+.card{background:white;padding:16px;border-radius:12px;margin-bottom:13px;box-shadow:0 2px 8px #0001}
+h3{color:#123b55;margin-top:0}
+nav{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:13px}
+button{border:0;border-radius:8px;background:#126b81;color:white;padding:12px;font-size:14px;cursor:pointer}
+nav button{min-height:48px}
+input,select,textarea{width:100%;padding:12px;border:1px solid #ccd6df;border-radius:7px;margin:6px 0 13px;font-size:15px;background:white}
+textarea{min-height:80px}
+label{font-size:13px;font-weight:bold;color:#43576a}
+.hidden{display:none!important}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.stat{background:#e8f2f6;padding:13px;border-radius:9px}
+.stat strong{font-size:23px;color:#126b81;display:block}
+.patient{border:1px solid #dbe3e9;padding:12px;border-radius:9px;margin:9px 0}
+.patient button{margin-top:6px}
+.small{font-size:12px;color:#64748b}
+.danger{background:#a83232}
+.secondary{background:#526779}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.notice{background:#fff3d9;padding:12px;border-radius:8px;font-size:13px;margin-bottom:12px}
+.result{white-space:pre-wrap;background:#f3f6f8;padding:12px;border-radius:8px;margin-top:10px}
+@media(max-width:430px){nav{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
 <header>
 <h2>🏥 ICU Notes & Handover</h2>
-<p>Clinical documentation and patient management</p>
+<p>Clinical Management System · Version 2.0</p>
 </header>
+
 <main>
+<div class="notice">
+DEMONSTRATION VERSION: Use fictional test data only. Not approved for clinical patient records.
+</div>
+
 <div class="card">
-<h3>Dashboard</h3>
-<p>Patients currently registered: <b id="count">0</b></p>
-<p class="small">ICU and General Ward Management</p>
+<h3>Hospital Dashboard</h3>
+<div class="stats">
+<div class="stat"><strong id="total">0</strong>Registered patients</div>
+<div class="stat"><strong id="icuCount">0</strong>ICU patients</div>
+<div class="stat"><strong id="wardCount">0</strong>Ward patients</div>
+<div class="stat"><strong id="noteCount">0</strong>Clinical entries</div>
+</div>
 </div>
 
 <nav>
-<button onclick="show('patients')">Patients</button>
-<button onclick="show('add')">Add Patient</button>
-<button onclick="show('notes')">Clinical Notes</button>
-<button onclick="show('handover')">Handover</button>
+<button onclick="show('patients')">👥 Patients</button>
+<button onclick="show('admit')">➕ Admission</button>
+<button onclick="show('vitals')">❤️ Monitoring</button>
+<button onclick="show('vent')">🫁 Ventilator</button>
+<button onclick="show('notes')">📝 Clinical Notes</button>
+<button onclick="show('fluids')">💧 Fluid Balance</button>
+<button onclick="show('handover')">🔄 Handover</button>
 </nav>
 
 <section id="patients" class="card">
-<h3>Patient List</h3>
-<div id="patientList">No patients registered.</div>
+<h3>Patient Directory</h3>
+<input id="search" placeholder="Search patient ID or name" oninput="renderPatients()">
+<div id="patientList"></div>
 </section>
 
-<section id="add" class="card hidden">
-<h3>Register Patient</h3>
-<form id="patientForm">
-<label>Patient ID</label>
-<input id="pid" required>
-<label>Patient name or test name</label>
-<input id="pname" required>
-<label>Age</label>
-<input id="age" type="number">
+<section id="admit" class="card hidden">
+<h3>Patient Admission</h3>
+<label>Patient ID *</label>
+<input id="pid" placeholder="Example: TEST001">
+<label>Patient name *</label>
+<input id="pname" placeholder="Fictional test patient">
+<div class="row">
+<div><label>Age</label><input id="age" type="number"></div>
+<div><label>Sex</label><select id="sex"><option>Male</option><option>Female</option><option>Other</option></select></div>
+</div>
 <label>Ward</label>
-<select id="ward">
-<option>ICU</option>
-<option>General Ward</option>
-<option>HDU</option>
-</select>
-<label>Diagnosis</label>
+<select id="ward"><option>ICU</option><option>HDU</option><option>General Ward</option></select>
+<label>Admission date</label>
+<input id="adate" type="date">
+<label>Primary diagnosis</label>
 <textarea id="diagnosis"></textarea>
-<button type="submit">Save Patient</button>
-</form>
+<label>Past medical history</label>
+<textarea id="history"></textarea>
+<button onclick="admitPatient()">Save Admission</button>
+</section>
+
+<section id="vitals" class="card hidden">
+<h3>Vital Signs Monitoring</h3>
+<label>Patient ID</label>
+<select id="vid"></select>
+<div class="row">
+<div><label>Heart rate (bpm)</label><input id="hr" type="number"></div>
+<div><label>Respiratory rate (/min)</label><input id="rr" type="number"></div>
+<div><label>SBP (mmHg)</label><input id="sbp" type="number"></div>
+<div><label>DBP (mmHg)</label><input id="dbp" type="number"></div>
+<div><label>SpO₂ (%)</label><input id="spo" type="number"></div>
+<div><label>Temperature (°C)</label><input id="temp" type="number" step=".1"></div>
+</div>
+<label>MAP (mmHg) - optional</label>
+<input id="map" type="number">
+<label>Additional observations</label>
+<textarea id="vcomment"></textarea>
+<button onclick="saveVitals()">Save Observations</button>
+<div id="vresult"></div>
+</section>
+
+<section id="vent" class="card hidden">
+<h3>Mechanical Ventilation Chart</h3>
+<label>Patient ID</label>
+<select id="ventid"></select>
+<label>Ventilator mode</label>
+<select id="mode">
+<option>AC/VC</option><option>AC/PC</option>
+<option>SIMV</option><option>PSV</option>
+<option>CPAP</option><option>Other</option>
+</select>
+<div class="row">
+<div><label>FiO₂ (%)</label><input id="fio" type="number"></div>
+<div><label>PEEP (cmH₂O)</label><input id="peep" type="number" step=".1"></div>
+<div><label>Tidal volume (mL)</label><input id="vt" type="number"></div>
+<div><label>Set RR (/min)</label><input id="setrr" type="number"></div>
+<div><label>Pressure support</label><input id="ps" type="number"></div>
+<div><label>Peak pressure</label><input id="pip" type="number"></div>
+</div>
+<label>Additional details</label>
+<textarea id="ventcomment"></textarea>
+<button onclick="saveVent()">Save Ventilator Record</button>
+<div id="ventresult"></div>
 </section>
 
 <section id="notes" class="card hidden">
-<h3>Daily Clinical Notes</h3>
+<h3>Daily Clinical Progress</h3>
 <label>Patient ID</label>
-<input id="noteid">
-<label>Clinical progress</label>
-<textarea id="progress" placeholder="Clinical assessment and progress"></textarea>
+<select id="noteid"></select>
+<label>Subjective / Overnight events</label>
+<textarea id="subjective"></textarea>
+<label>Objective / Examination</label>
+<textarea id="objective"></textarea>
+<label>Investigations</label>
+<textarea id="investigation"></textarea>
+<label>Assessment</label>
+<textarea id="assessment"></textarea>
 <label>Management plan</label>
-<textarea id="plan" placeholder="Treatment and management plan"></textarea>
-<button onclick="saveNote()">Save Note</button>
-<div id="noteResult"></div>
+<textarea id="management"></textarea>
+<button onclick="saveNote()">Save Clinical Note</button>
+<div id="noteresult"></div>
+</section>
+
+<section id="fluids" class="card hidden">
+<h3>Fluid Balance Chart</h3>
+<label>Patient ID</label>
+<select id="fluidid"></select>
+<h4>Fluid intake (mL)</h4>
+<div class="row">
+<div><label>IV fluids</label><input id="iv" type="number"></div>
+<div><label>Oral intake</label><input id="oral" type="number"></div>
+<div><label>Other intake</label><input id="otherin" type="number"></div>
+</div>
+<h4>Fluid output (mL)</h4>
+<div class="row">
+<div><label>Urine</label><input id="urine" type="number"></div>
+<div><label>Drains</label><input id="drains" type="number"></div>
+<div><label>Other output</label><input id="otherout" type="number"></div>
+</div>
+<button onclick="saveFluid()">Calculate & Save Balance</button>
+<div id="fluidresult"></div>
 </section>
 
 <section id="handover" class="card hidden">
-<h3>Doctor Handover</h3>
+<h3>SBAR Doctor Handover</h3>
 <label>Patient ID</label>
-<input id="handid">
-<label>Clinical condition</label>
-<textarea id="condition"></textarea>
-<label>Pending investigations</label>
-<textarea id="pending"></textarea>
-<label>Tasks for next shift</label>
-<textarea id="tasks"></textarea>
+<select id="handid"></select>
+<label>Situation</label>
+<textarea id="situation" placeholder="Current clinical problem"></textarea>
+<label>Background</label>
+<textarea id="background" placeholder="Relevant history and admission details"></textarea>
+<label>Assessment</label>
+<textarea id="handassessment" placeholder="Current clinical status"></textarea>
+<label>Recommendation</label>
+<textarea id="recommendation" placeholder="Pending tasks and actions for next shift"></textarea>
+<label>Outgoing doctor</label>
+<input id="outdoctor">
+<label>Incoming doctor</label>
+<input id="indoctor">
 <button onclick="saveHandover()">Save Handover</button>
-<div id="handResult"></div>
+<div id="handresult"></div>
 </section>
 
 <div class="card">
-<p class="small">ICU Notes prototype • Version 1.0</p>
+<h3>Data Management</h3>
+<button class="secondary" onclick="exportData()">Export Test Data (JSON)</button>
+<button class="danger" onclick="clearData()">Delete All Local Data</button>
+<p class="small">Records are stored only in this browser on this device. Export files may contain sensitive information. Do not use real patient data in this prototype.</p>
 </div>
 </main>
 
 <script>
-let patients=JSON.parse(localStorage.getItem('icuPatients')||'[]');
-
-function save(){
- localStorage.setItem('icuPatients',JSON.stringify(patients));
- render();
-}
-
-function render(){
- document.getElementById('count').textContent=patients.length;
- document.getElementById('patientList').innerHTML=
- patients.length?patients.map(p=>`
- <div class="patient">
- <b>${escapeHTML(p.name)}</b>
- <p>ID: ${escapeHTML(p.id)} | Age: ${escapeHTML(p.age||'N/A')}</p>
- <p>Ward: ${escapeHTML(p.ward)}</p>
- <p>Diagnosis: ${escapeHTML(p.diagnosis||'Not entered')}</p>
- </div>`).join(''):'No patients registered.';
-}
-
-function escapeHTML(value){
- return String(value).replace(/[&<>"']/g,c=>({
- '&':'&amp;','<':'&lt;','>':'&gt;',
- '"':'&quot;',"'":'&#39;'
- })[c]);
-}
-
-function show(id){
- ['patients','add','notes','handover'].forEach(x=>
- document.getElementById(x).classList.add('hidden'));
- document.getElementById(id).classList.remove('hidden');
-}
-
-document.getElementById('patientForm').onsubmit=function(e){
- e.preventDefault();
- const id=document.getElementById('pid').value.trim();
- if(patients.some(p=>p.id===id)){
- alert('This patient ID already exists');
- return;
- }
- patients.push({
- id,
- name:document.getElementById('pname').value,
- age:document.getElementById('age').value,
- ward:document.getElementById('ward').value,
- diagnosis:document.getElementById('diagnosis').value
- });
- save();
- this.reset();
- show('patients');
- alert('Patient registered');
+const keys={
+patients:'icu2_patients',
+vitals:'icu2_vitals',
+vents:'icu2_vents',
+notes:'icu2_notes',
+fluids:'icu2_fluids',
+hands:'icu2_hands'
 };
-
+function get(k){try{return JSON.parse(localStorage.getItem(keys[k])||'[]')}catch(e){return []}}
+function put(k,a){localStorage.setItem(keys[k],JSON.stringify(a))}
+function val(id){return document.getElementById(id).value.trim()}
+function safe(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function stamp(){return new Date().toLocaleString()}
+function show(id){
+document.querySelectorAll('main section').forEach(x=>x.classList.add('hidden'));
+document.getElementById(id).classList.remove('hidden');
+refresh();
+}
+function refresh(){
+let p=get('patients');
+document.getElementById('total').textContent=p.length;
+document.getElementById('icuCount').textContent=p.filter(x=>x.ward==='ICU').length;
+document.getElementById('wardCount').textContent=p.filter(x=>x.ward!=='ICU').length;
+document.getElementById('noteCount').textContent=get('notes').length;
+let options='<option value="">Select patient</option>'+p.map(x=>`<option value="${safe(x.id)}">${safe(x.id)} - ${safe(x.name)}</option>`).join('');
+['vid','ventid','noteid','fluidid','handid'].forEach(id=>document.getElementById(id).innerHTML=options);
+renderPatients();
+}
+function renderPatients(){
+let q=(document.getElementById('search')?.value||'').toLowerCase();
+let p=get('patients').filter(x=>(x.id+' '+x.name+' '+x.diagnosis).toLowerCase().includes(q));
+document.getElementById('patientList').innerHTML=p.length?p.map(x=>`
+<div class="patient">
+<b>${safe(x.name)}</b>
+<p>ID: ${safe(x.id)} · Age: ${safe(x.age||'N/A')} · ${safe(x.sex)}</p>
+<p>Ward: ${safe(x.ward)}</p>
+<p>Diagnosis: ${safe(x.diagnosis||'Not entered')}</p>
+<button onclick="viewPatient('${safe(x.id)}')">View summary</button>
+<button class="danger" onclick="deletePatient('${safe(x.id)}')">Delete</button>
+<div id="summary-${safe(x.id)}"></div>
+</div>`).join(''):'No patients found.'; 
+}
+function admitPatient(){
+let id=val('pid'),name=val('pname');
+if(!id||!name){alert('Patient ID and name are required');return}
+let p=get('patients');
+if(p.some(x=>x.id===id)){alert('Patient ID already exists');return}
+p.push({id,name,age:val('age'),sex:val('sex'),ward:val('ward'),date:val('adate'),diagnosis:val('diagnosis'),history:val('history')});
+put('patients',p);refresh();alert('Admission saved');show('patients');
+}
+function viewPatient(id){
+let p=get('patients').find(x=>x.id===id);if(!p)return;
+let el=document.getElementById('summary-'+id);
+el.innerHTML=`<div class="result"><b>Admission summary</b>
+Date: ${safe(p.date)} 
+History: ${safe(p.history)}
+Latest vitals: ${get('vitals').filter(x=>x.id===id).slice(-1).map(x=>safe(JSON.stringify(x.data))).join('')||'None'}
+Notes: ${get('notes').filter(x=>x.id===id).length}
+Handovers: ${get('hands').filter(x=>x.id===id).length}</div>`;
+}
+function deletePatient(id){
+if(!confirm('Delete this patient and all associated records?'))return;
+put('patients',get('patients').filter(x=>x.id!==id));
+refresh();
+}
+function requirePatient(id){if(!val(id)){alert('Please select a patient');return false}if(!get('patients').some(x=>x.id===val(id))){alert('Patient not found');return false}return true}
+function record(k,id,data){
+let a=get(k);a.push({id:val(id),time:stamp(),data});put(k,a);refresh();
+}
+function saveVitals(){
+if(!requirePatient('vid'))return;
+let d={hr:val('hr'),rr:val('rr'),sbp:val('sbp'),dbp:val('dbp'),spo:val('spo'),temp:val('temp'),map:val('map'),comment:val('vcomment')};
+record('vitals','vid',d);document.getElementById('vresult').textContent='Observations saved at '+stamp();
+}
+function saveVent(){
+if(!requirePatient('ventid'))return;
+let d={mode:val('mode'),fio:val('fio'),peep:val('peep'),vt:val('vt'),setrr:val('setrr'),ps:val('ps'),pip:val('pip'),comment:val('ventcomment')};
+record('vents','ventid',d);document.getElementById('ventresult').textContent='Ventilator record saved.';
+}
 function saveNote(){
- const id=document.getElementById('noteid').value.trim();
- if(!patients.some(p=>p.id===id)){
- alert('Patient ID not found');
- return;
- }
- const notes=JSON.parse(localStorage.getItem('icuNotes')||'[]');
- notes.push({
- id,
- date:new Date().toISOString(),
- progress:document.getElementById('progress').value,
- plan:document.getElementById('plan').value
- });
- localStorage.setItem('icuNotes',JSON.stringify(notes));
- document.getElementById('noteResult').textContent='Clinical note saved.';
+if(!requirePatient('noteid'))return;
+let d={subjective:val('subjective'),objective:val('objective'),investigation:val('investigation'),assessment:val('assessment'),management:val('management')};
+record('notes','noteid',d);document.getElementById('noteresult').textContent='Clinical note saved.';
 }
-
+function saveFluid(){
+if(!requirePatient('fluidid'))return;
+let ins=['iv','oral','otherin'].reduce((a,x)=>a+(Number(val(x))||0),0);
+let outs=['urine','drains','otherout'].reduce((a,x)=>a+(Number(val(x))||0),0);
+let d={intake:ins,output:outs,balance:ins-outs,iv:val('iv'),oral:val('oral'),otherin:val('otherin'),urine:val('urine'),drains:val('drains'),otherout:val('otherout')};
+record('fluids','fluidid',d);
+document.getElementById('fluidresult').textContent=`Total intake: ${ins} mL\nTotal output: ${outs} mL\nNet balance: ${ins-outs} mL`;
+}
 function saveHandover(){
- const id=document.getElementById('handid').value.trim();
- if(!patients.some(p=>p.id===id)){
- alert('Patient ID not found');
- return;
- }
- const hands=JSON.parse(localStorage.getItem('icuHandovers')||'[]');
- hands.push({
- id,
- date:new Date().toISOString(),
- condition:document.getElementById('condition').value,
- pending:document.getElementById('pending').value,
- tasks:document.getElementById('tasks').value
- });
- localStorage.setItem('icuHandovers',JSON.stringify(hands));
- document.getElementById('handResult').textContent='Handover saved.';
+if(!requirePatient('handid'))return;
+let d={situation:val('situation'),background:val('background'),assessment:val('handassessment'),recommendation:val('recommendation'),outgoing:val('outdoctor'),incoming:val('indoctor')};
+record('hands','handid',d);document.getElementById('handresult').textContent='SBAR handover saved.';
 }
-
-render();
+function exportData(){
+let data={};Object.keys(keys).forEach(k=>data[k]=get(k));
+let blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+let url=URL.createObjectURL(blob),a=document.createElement('a');
+a.href=url;a.download='icu-notes-test-backup.json';a.click();URL.revokeObjectURL(url);
+}
+function clearData(){
+if(!confirm('Permanently delete all data saved by this prototype in this browser?'))return;
+Object.values(keys).forEach(k=>localStorage.removeItem(k));
+refresh();alert('Local data cleared');
+}
+refresh();
 </script>
 </body>
 </html>
